@@ -11,6 +11,8 @@ Repository for IRIS Systems Team Recruitment Tasks.
 
 - Two-Stage Rate Limiter has been set under nginx with a burst of 12, delay of 8 requests and 5req/sec rate.
 
+- nginx load balancer setup on IP Hash mode. 
+
 ## Run Locally
 
 Clone the project
