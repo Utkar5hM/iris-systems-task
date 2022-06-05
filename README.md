@@ -1,7 +1,9 @@
 
 # IRIS-Systems-Task
 
-Repository for IRIS Systems Team Recruitment Tasks.
+Repository for IRIS Systems Team Recruitment Tasks. 
+
+note: Some tasks can be seen under branches.
 
 ## Features
 
