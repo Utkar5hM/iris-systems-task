@@ -10,7 +10,7 @@ services:
       MYSQL_DATABASE: shop1_development
       MYSQL_USER: appuser
       MYSQL_PASSWORD: iris-task
-  app: &app_c
+  appc1: &app_c
     build: ./app
     command: bundle exec rails s -p 3000 -b '0.0.0.0' && rake 
     depends_on:
@@ -22,6 +22,10 @@ services:
       DB_NAME: shop1_development
       DB_PASSWORD: iris-task
       DB_HOST: db
+  appc2:
+    <<: *app_c
+  appc3:
+    <<: *app_c
   web:
     image: nginx
     volumes:
@@ -29,6 +33,8 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - app
+      - appc1
+      - appc2
+      - appc3
     restart: always
   

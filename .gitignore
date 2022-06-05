@@ -1,1 +1,22 @@
-data/*
+/data/*
+
+
+/app/src/.bundle
+
+/app/src/log/*
+/app/src/tmp/*
+!/app/src/log/.keep
+!/app/src/tmp/.keep
+
+# Ignore uploaded files in development
+/app/src/storage/*
+!/app/src/storage/.keep
+
+/app/src/node_modules
+/app/src/yarn-error.log
+
+/app/src/public/assets
+/app/src.byebug_history
+
+# Ignore master key for decrypting credentials and more.
+/app/src/config/master.key
