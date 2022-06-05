@@ -3,6 +3,7 @@ services:
   db:
     image: mysql:5.7
     restart: always
+    container_name: mysqldb
     volumes:
       - "./data:/var/lib/mysql:rw"
     environment:
@@ -37,4 +38,19 @@ services:
       - appc2
       - appc3
     restart: always
+  db-backup:
+    image: fradelg/mysql-cron-backup
+    environment:
+      MYSQL_HOST: mysqldb
+      MYSQL_USER: root
+      MYSQL_PASS: iris-task
+      MAX_BACKUPS: 15
+      INIT_BACKUP: 1
+      CRON_TIME: 0 3 * * *
+      GZIP_LEVEL: 9
+    depends_on:
+      - db
+    volumes:
+      - "./backup:/backup"
+    restart: unless-stopped
   
