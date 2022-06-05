@@ -1,17 +1,75 @@
-# iris-systems-task
+
+# IRIS-Systems-Task
+
+Repository for IRIS Systems Team Recruitment Tasks.
+
+## Features
+
+- DB files and nginx config stored in the ```data``` and ```nginx``` folders respectively.
+
+- DB daily backups configured to be daily created at 3:00 a.m. and on launch of the db-backup service. Backups will be stored in the ```backup``` folder.
+
+- Two-Stage Rate Limiter has been set under nginx with a burst of 12, delay of 8 requests and 5req/sec rate.
+
+## Run Locally
+
+Clone the project
+
+```bash
+  git clone https://github.com/Utkar5hM/iris-systems-task.git
+```
+
+Go to the project directory
+
+```bash
+  cd iris-systems-task
+```
+
+Start the docker Containers
+
+```bash
+  docker-compose up
+```
+
+migrate DB if you are launching the app for the first time using
+
+```bash
+  docker-compose run app rake db:migrate
+```
 
 
-## To start:
+## Docker Images Used:
 
-run
-```
-docker-compose up
-```
+- For database: mysql:5.7
+- For reverse-proxy/load-balancer: Nginx
+- For Daily DB backup using cronjob : fradelg/mysql-cron-backup
+- For the rails app: ruby:2.5.1
 
-migrate db for the first time you launch using
+
+## Screenshots
+
+With all the 3 container runnning using IP hash method for load balancing:
+![App Screenshot](https://i.imgur.com/KHqW1Go.png)
+
+adding a example shop:
+![App Screenshot](https://i.imgur.com/q2aTZF5.png)
+
+
+Testing nginx rate-limiter using siege:
+
+command:
 ```
-docker-compose run app rake db:migrate
+siege -c 20 -r 1 -b --no-parser http://localhost:8080/
+
 ```
+![App Screenshot](https://i.imgur.com/hnqXwNM.png)
+
+
+Verifying Nightly Backups:
+```
+ls backup/ -l
+```
+![App Screenshot](https://i.imgur.com/jRNLYn9.png)
 
 ## Tasks Completed
 
@@ -35,4 +93,3 @@ when the containers go down.
 a given period of time
 - [x] Create a cron job to create nightly database dumps and store them on the host machine
 for persistence.
-
