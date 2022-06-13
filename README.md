@@ -75,6 +75,142 @@ ls backup/ -l
 ```
 ![App Screenshot](https://i.imgur.com/jRNLYn9.png)
 
+
+## docker-compose.yml
+
+#### Specifying docker Version ( not required )
+```yml
+version: "2.6"
+```
+
+#### Container configuration for the database
+
+```yml
+  services:
+  db:
+    image: mysql:5.7
+    restart: always
+    container_name: mysqldb
+    volumes:
+      - "./data:/var/lib/mysql:rw"
+    environment:
+      MYSQL_ROOT_PASSWORD: iris-task
+      MYSQL_DATABASE: shop1_development
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: iris-task
+```
+
+| Parameter | value     | Description                |
+| :-------- | :------- | :------------------------- |
+| `image` | `mysql:5.7` | docker image for db |
+| `retart` | `always` | so that the db stays active |
+| `container_name` | `mysqldb` | name for the db, It will act as the hosts name. |
+| `volumes` | `- "./data:/var/lib/mysql:rw"` | specifying a mount for persistence.|
+| | | db data will be stored in data folder of the project. |
+| `environment`|`MYSQL_ROOT_PASSWORD:iris-task`|password for the database.|
+||`MYSQL_DATABASE: shop1_development`|Name for the default database.|
+||`MYSQL_USER: appuser`|unused value :P|
+||`MYSQL_PASSWORD: iris-task`|unused value :P|
+
+#### Container configuration for the app
+
+```yml
+  appc1: &app_c
+    build: ./app
+    command: bundle exec rails s -p 3000 -b '0.0.0.0' && rake 
+    depends_on:
+      - db
+    links:
+      - db
+    environment:
+      DB_USER: root
+      DB_NAME: shop1_development
+      DB_PASSWORD: iris-task
+      DB_HOST: db
+```
+
+| Parameter | value     | Description                |
+| :-------- | :------- | :------------------------- |
+| `appc1` | `&app_c` | creates a kind of reference so that the config can be reused. |
+| `build` | `./app` | builds the docker file from inside the app folder |
+| `depends_on` | `- db` | kind of helps in linking with the database |
+| `links` | `- db` | Again, kind of helps in linking with the database |
+| `volumes` | `- "./data:/var/lib/mysql:rw"` | specifying a mount for persistence.
+| | | db data will be stored in data folder of the project. |
+| `environment`|`DB_USER: root`|specifies the db user.|
+||`DB_NAME: shop1_development`|Name of the database to use.|
+||`DB_PASSWORD: iris-task`|password for the database.|
+||`DB_HOST: db`|specifying the database host. :) docker automatically links it for us from the specified service(container).|
+
+#### For cloned app containers app2 and app3
+```yml
+  appc2:
+    <<: *app_c
+  appc3:
+    <<: *app_c
+```
+| Parameter | value     | Description                |
+| :-------- | :------- | :------------------------- |
+| `<<` | `*app_c` | copies the configuration from the reference specified. |
+
+#### container configuration for the nginx
+```yml
+  web:
+    image: nginx
+    volumes:
+      - "./nginx/nginx.conf:/etc/nginx/nginx.conf"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - appc1
+      - appc2
+      - appc3
+    restart: always
+```
+| Parameter | value     | Description                |
+| :-------- | :------- | :------------------------- |
+| `image` | `nginx` | docker image |
+| `retart` | `always` | so that nginx reverse proxy always stays active |
+| `depends_on` | `- appc1` | linking apps service as a dependency for this service |
+|  | `- appc2` | |
+|  | `- appc3` | |
+| `volumes` | `- "./nginx/nginx.conf:/etc/nginx/nginx.conf"` | persistence for the nginx config file|
+
+#### container configuration for the daily backup cronjob task server
+```yml
+  db-backup:
+    image: fradelg/mysql-cron-backup
+    environment:
+      MYSQL_HOST: mysqldb
+      MYSQL_USER: root
+      MYSQL_PASS: iris-task
+      MAX_BACKUPS: 15
+      INIT_BACKUP: 1
+      CRON_TIME: 0 3 * * *
+      GZIP_LEVEL: 9
+    depends_on:
+      - db
+    volumes:
+      - "./backup:/backup"
+    restart: unless-stopped
+```
+
+| Parameter | value     | Description                |
+| :-------- | :------- | :------------------------- |
+| `image` | `fradelg/mysql-cron-backup` | docker image for easier backup |
+| `retart` | `unless-stopped` | so that the backup taking server stays active |
+| `depends_on` | `db` | specified db as a dependency for this container |
+| `volumes` | `- "./backup:/backup"` | specifying a mount for storing backups.|
+| | | db data will be stored in data folder of the project. |
+| `environment`|`MYSQL_*`| database configs.|
+||`MAX_BACKUPS: 15`|Maximum number of backups to store.|
+||| Server will deleted the oldest backup whenever full. |
+||`INIT_BACKUP: 1` |To take a backup whenever this container is started|
+||`CRON_TIME: 0 3 * * *`|Specified the time at which backup will be taken.|
+|||https://crontab.guru can be used. currently set to take backups at 3:00AM daily|
+||`GZIP_LEVEL: 9`|describes the compression level|
+
+
 ## Tasks Completed
 
 - [x] Pack the rails application in a docker container image.
